@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #ef4444 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+        }
+
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .timer-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: none;
+            text-align: center;
+        }
+
+        .timer-card:hover {
+            background: white;
+            transform: scale(1.05);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .timer-card:hover .icon-container {
+            transform: scale(1.1);
+        }
+
+        .classic-icon {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+        }
+
+        .extended-icon {
+            background: linear-gradient(135deg, #ec4899, #ef4444);
+        }
+
+        .custom-icon {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+        }
+
+        .timer-card h3 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .timer-card p {
+            color: #6b7280;
+            font-size: 1rem;
+            margin: 0.25rem 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .timer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pomodoro Timer</h1>
+            <p class="subtitle">Choose your productivity mode</p>
+        </div>
+
+        <div class="timer-grid">
+            <!-- Classic Timer -->
+            <button class="timer-card" onclick="location.href='timer1.html'">
+                <div class="icon-container classic-icon">⏰</div>
+                <h3>Classic</h3>
+                <p>25 min work</p>
+                <p>5 min break</p>
+            </button>
+
+            <!-- Extended Timer -->
+            <button class="timer-card" onclick="location.href='timer2.html'">
+                <div class="icon-container extended-icon">☕</div>
+                <h3>Extended</h3>
+                <p>50 min work</p>
+                <p>10 min break</p>
+            </button>
+
+            <!-- Custom Timer -->
+            <button class="timer-card" onclick="location.href='custom_timer.html'">
+                <div class="icon-container custom-icon">⏱️</div>
+                <h3>Custom</h3>
+                <p>Set your own</p>
+                <p>durations</p>
+            </button>
+        </div>
+    </div>
+</body>
+</html>

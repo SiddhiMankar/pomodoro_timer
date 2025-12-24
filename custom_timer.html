@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background 1s ease;
+        }
+
+        body.setup-mode {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        body.work-mode {
+            background: linear-gradient(135deg, #f97316 0%, #f59e0b 50%, #eab308 100%);
+        }
+
+        body.break-mode {
+            background: linear-gradient(135deg, #10b981 0%, #22c55e 50%, #14b8a6 100%);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: white;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+        }
+
+        .session-count {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+        }
+
+        .setup-card, .timer-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .setup-card {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            text-align: center;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+
+        .error-box {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 0;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-text {
+            color: #1e40af;
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 0;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(90deg, #a855f7, #ec4899);
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5);
+        }
+
+        /* Timer styles */
+        .mode-badge {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: background 1s ease;
+        }
+
+        .badge.work {
+            background: linear-gradient(90deg, #f97316, #f59e0b);
+        }
+
+        .badge.break {
+            background: linear-gradient(90deg, #10b981, #22c55e);
+        }
+
+        .timer-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 2rem;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s linear;
+            stroke-linecap: round;
+        }
+
+        .time-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .time {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .mode-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-start, .btn-pause {
+            background: linear-gradient(90deg, #a855f7, #ec4899);
+            color: white;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-pause {
+            background: linear-gradient(90deg, #4b5563, #374151);
+        }
+
+        .btn-start:hover, .btn-pause:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5);
+        }
+
+        .btn-reset {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-reset:hover {
+            background: #f9fafb;
+            transform: scale(1.05);
+        }
+
+        .timer-info {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: slideDown 0.5s ease;
+            max-width: 90%;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .circular-progress {
+                width: 240px;
+                height: 240px;
+            }
+
+            .time {
+                font-size: 3rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="setup-mode">
+    <div class="container">
+        <!-- Setup View -->
+        <div id="setupView">
+            <div class="header">
+                <button class="back-button" onclick="location.href='index.html'">
+                    ← Back to Home
+                </button>
+                <h1>Custom Timer</h1>
+                <p class="subtitle">Set your own durations</p>
+            </div>
+
+            <div class="setup-card">
+                <div class="form-group">
+                    <label for="worktime">Work Duration (MM:SS)</label>
+                    <input type="text" id="worktime" placeholder="25:00" value="25:00">
+                </div>
+
+                <div class="form-group">
+                    <label for="breaktime">Break Duration (MM:SS)</label>
+                    <input type="text" id="breaktime" placeholder="5:00" value="5:00">
+                </div>
+
+                <div id="errorBox" class="error-box hidden">
+                    <p class="error-text" id="errorText"></p>
+                </div>
+
+                <button class="btn-submit" onclick="startCustomTimer()">
+                    Start Custom Timer
+                </button>
+
+                <div class="info-box">
+                    <p class="info-text">
+                        💡 Enter time in MM:SS format<br>
+                        Example: 25:00 for 25 minutes
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer View -->
+        <div id="timerView" class="hidden">
+            <div class="header">
+                <button class="back-button" onclick="backToSetup()">
+                    ← Back to Setup
+                </button>
+                <h1>Custom Timer</h1>
+                <p class="session-count">Sessions completed: <span id="sessionCount">0</span></p>
+            </div>
+
+            <div class="timer-card">
+                <div class="mode-badge">
+                    <span class="badge work" id="modeBadge">💪 Work Time</span>
+                </div>
+
+                <div class="timer-display">
+                    <div class="circular-progress">
+                        <svg class="progress-ring" width="280" height="280">
+                            <circle
+                                stroke="rgba(255, 255, 255, 0.1)"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="134"
+                                cx="140"
+                                cy="140"
+                            />
+                            <circle
+                                id="progressCircle"
+                                class="progress-ring-circle"
+                                stroke="#f59e0b"
+                                stroke-width="12"
+                                fill="transparent"
+                                r="134"
+                                cx="140"
+                                cy="140"
+                            />
+                        </svg>
+                        <div class="time-text">
+                            <div class="time" id="time">00:00</div>
+                            <div class="mode-label" id="modeLabel">FOCUS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-start" id="startBtn" onclick="startTimer()">
+                        ▶ Start
+                    </button>
+                    <button class="btn-reset" onclick="resetTimer()">
+                        ↻ Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="timer-info" id="timerInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        let mode = 'work';
+        let workDuration = 0;
+        let breakDuration = 0;
+        let sessionCount = 0;
+        let isrunning = false;
+        let timer = null;
+        let timeleft = 0;
+
+        const radius = 134;
+        const circumference = 2 * Math.PI * radius;
+        const progressCircle = document.getElementById('progressCircle');
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressCircle.style.strokeDashoffset = 0;
+
+        function convertToSeconds(timeStr) {
+            if(!/^\d{1,3}:\d{2}$/.test(timeStr)){
+                return -1;
+            }
+            const [mins, secs] = timeStr.split(":").map(Number);
+            if(secs < 0 || secs >= 60) {
+                return -1;
+            }
+            return parseInt(mins, 10) * 60 + parseInt(secs, 10);
+        }
+
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+
+        function hideError() {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.classList.add('hidden');
+        }
+
+        function startCustomTimer() {
+            const workInput = document.getElementById("worktime").value.trim();
+            const breakInput = document.getElementById("breaktime").value.trim();
+            const worksec = convertToSeconds(workInput);
+            const breaksec = convertToSeconds(breakInput);
+
+            if (worksec <= 0 || breaksec <= 0) {
+                showError("Please enter valid durations in MM:SS format (e.g., 25:00)");
+                return;
+            }
+
+            workDuration = worksec;
+            breakDuration = breaksec;
+            timeleft = workDuration;
+            mode = "work";
+            sessionCount = 0;
+            isrunning = false;
+
+            hideError();
+            document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('timerView').classList.remove('hidden');
+            document.body.className = 'work-mode';
+
+            // Update timer info
+            const workMins = Math.floor(workDuration / 60);
+            const breakMins = Math.floor(breakDuration / 60);
+            document.getElementById('timerInfo').textContent = `Work: ${workMins} min • Break: ${breakMins} min`;
+
+            updatedisplay();
+        }
+
+        function backToSetup() {
+            pauseTimer();
+            document.getElementById('timerView').classList.add('hidden');
+            document.getElementById('setupView').classList.remove('hidden');
+            document.body.className = 'setup-mode';
+        }
+
+        function updateProgress() {
+            const totalDuration = mode === 'work' ? workDuration : breakDuration;
+            const progress = totalDuration > 0 ? timeleft / totalDuration : 1;
+            const offset = circumference - (progress * circumference);
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function updatedisplay() {
+            const mins = Math.floor(timeleft / 60);
+            const secs = timeleft % 60;
+            document.getElementById("time").innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+            
+            const body = document.body;
+            const badge = document.getElementById("modeBadge");
+            const modeLabel = document.getElementById("modeLabel");
+            
+            if (mode === "work") {
+                body.className = "work-mode";
+                badge.className = "badge work";
+                badge.innerText = "💪 Work Time";
+                modeLabel.innerText = "FOCUS";
+                progressCircle.setAttribute('stroke', '#f59e0b');
+            } else {
+                body.className = "break-mode";
+                badge.className = "badge break";
+                badge.innerText = "☕ Break Time";
+                modeLabel.innerText = "BREAK";
+                progressCircle.setAttribute('stroke', '#10b981');
+            }
+
+            updateProgress();
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `<p style="color: #1f2937; margin: 0;">${message}</p>`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        function tick() {
+            if (!isrunning) return;
+            timeleft = timeleft - 1;
+            
+            if (timeleft <= 0) {
+                if (mode === "work") {
+                    sessionCount = sessionCount + 1;
+                    document.getElementById("sessionCount").innerText = sessionCount;
+                    const breakMins = Math.floor(breakDuration / 60);
+                    showNotification(`Work session complete! Time for a ${breakMins} minute break.`);
+                    mode = "break";
+                    timeleft = breakDuration;
+                } else {
+                    showNotification("Break is over! Ready to get back to work?");
+                    mode = "work";
+                    timeleft = workDuration;
+                    
+                }
+setTimeout(() => {
+    isrunning = true;
+}, 1000);
+
+            }
+            updatedisplay();
+        }
+
+        function updateStartButton() {
+            const btn = document.getElementById('startBtn');
+            if (isrunning) {
+                btn.className = 'btn-pause';
+                btn.innerHTML = '⏸ Pause';
+                btn.onclick = pauseTimer;
+            } else {
+                btn.className = 'btn-start';
+                btn.innerHTML = '▶ Start';
+                btn.onclick = startTimer;
+            }
+        }
+
+        function startTimer() {
+            if (timer) return;
+            isrunning = true;
+            timer = setInterval(tick, 1000);
+            updateStartButton();
+        }
+
+        function pauseTimer() {
+            isrunning = false;
+            clearInterval(timer);
+            timer = null;
+            updateStartButton();
+        }
+
+        function resetTimer() {
+            isrunning = false;
+            clearInterval(timer);
+            timer = null;
+            mode = 'work';
+            timeleft = workDuration;
+            updatedisplay();
+            updateStartButton();
+        }
+    </script>
+</body>
+</html>

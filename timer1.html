@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background 1s ease;
+        }
+
+        body.work-mode {
+            background: linear-gradient(135deg, #f97316 0%, #f59e0b 50%, #eab308 100%);
+        }
+
+        body.break-mode {
+            background: linear-gradient(135deg, #10b981 0%, #22c55e 50%, #14b8a6 100%);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: white;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .session-count {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+        }
+
+        .timer-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-badge {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: background 1s ease;
+        }
+
+        .badge.work {
+            background: linear-gradient(90deg, #f97316, #f59e0b);
+        }
+
+        .badge.break {
+            background: linear-gradient(90deg, #10b981, #22c55e);
+        }
+
+        .timer-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 2rem;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s linear;
+            stroke-linecap: round;
+        }
+
+        .time-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .time {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .mode-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-start, .btn-pause {
+            background: linear-gradient(90deg, #a855f7, #ec4899);
+            color: white;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-pause {
+            background: linear-gradient(90deg, #4b5563, #374151);
+        }
+
+        .btn-start:hover, .btn-pause:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5);
+        }
+
+        .btn-reset {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-reset:hover {
+            background: #f9fafb;
+            transform: scale(1.05);
+        }
+
+        .timer-info {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: slideDown 0.5s ease;
+            max-width: 90%;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .circular-progress {
+                width: 240px;
+                height: 240px;
+            }
+
+            .time {
+                font-size: 3rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="work-mode">
+    <div class="container">
+        <div class="header">
+            <button class="back-button" onclick="location.href='index.html'">
+                ← Back to Home
+            </button>
+            <h1>Classic Timer</h1>
+            <p class="session-count">Sessions completed: <span id="sessionCount">0</span></p>
+        </div>
+
+        <div class="timer-card">
+            <div class="mode-badge">
+                <span class="badge work" id="modeBadge">💪 Work Time</span>
+            </div>
+
+            <div class="timer-display">
+                <div class="circular-progress">
+                    <svg class="progress-ring" width="280" height="280">
+                        <circle
+                            stroke="rgba(255, 255, 255, 0.1)"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="134"
+                            cx="140"
+                            cy="140"
+                        />
+                        <circle
+                            id="progressCircle"
+                            class="progress-ring-circle"
+                            stroke="#f59e0b"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="134"
+                            cx="140"
+                            cy="140"
+                        />
+                    </svg>
+                    <div class="time-text">
+                        <div class="time" id="time">25:00</div>
+                        <div class="mode-label" id="modeLabel">FOCUS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-start" id="startBtn" onclick="startTimer()">
+                    ▶ Start
+                </button>
+                <button class="btn-reset" onclick="resetTimer()">
+                    ↻ Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="timer-info">
+            Work: 25 min • Break: 5 min
+        </div>
+    </div>
+
+    <script>
+        let mode = 'work';
+        let workDuration = 25 * 60;
+        let breakDuration = 5 * 60;
+        let sessionCount = 0;
+        let isrunning = false;
+        let timer = null;
+        let timeleft = workDuration;
+
+        const radius = 134;
+        const circumference = 2 * Math.PI * radius;
+        const progressCircle = document.getElementById('progressCircle');
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressCircle.style.strokeDashoffset = 0;
+
+        function updateProgress() {
+            const totalDuration = mode === 'work' ? workDuration : breakDuration;
+            const progress = totalDuration > 0 ? timeleft / totalDuration : 1;
+            const offset = circumference - (progress * circumference);
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function updatedisplay() {
+            const mins = Math.floor(timeleft / 60);
+            const secs = timeleft % 60;
+            document.getElementById("time").innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+            
+            const body = document.body;
+            const badge = document.getElementById("modeBadge");
+            const modeLabel = document.getElementById("modeLabel");
+            
+            if (mode === "work") {
+                body.className = "work-mode";
+                badge.className = "badge work";
+                badge.innerText = "💪 Work Time";
+                modeLabel.innerText = "FOCUS";
+                progressCircle.setAttribute('stroke', '#f59e0b');
+            } else {
+                body.className = "break-mode";
+                badge.className = "badge break";
+                badge.innerText = "☕ Break Time";
+                modeLabel.innerText = "BREAK";
+                progressCircle.setAttribute('stroke', '#10b981');
+            }
+
+            updateProgress();
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `<p style="color: #1f2937; margin: 0;">${message}</p>`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        function tick() {
+            if (!isrunning) return;
+            timeleft = timeleft - 1;
+            
+            if (timeleft <= 0) {
+                if (mode === "work") {
+                    sessionCount = sessionCount + 1;
+                    document.getElementById("sessionCount").innerText = sessionCount;
+                    showNotification("Work session complete! Time for a 5 minute break.");
+                    mode = "break";
+                    timeleft = breakDuration;
+                } else {
+                    showNotification("Break is over! Ready to get back to work?");
+                    mode = "work";
+                    timeleft = workDuration;
+                }
+                isrunning = false;
+                updateStartButton();
+            }
+            updatedisplay();
+        }
+
+        function updateStartButton() {
+            const btn = document.getElementById('startBtn');
+            if (isrunning) {
+                btn.className = 'btn-pause';
+                btn.innerHTML = '⏸ Pause';
+                btn.onclick = pauseTimer;
+            } else {
+                btn.className = 'btn-start';
+                btn.innerHTML = '▶ Start';
+                btn.onclick = startTimer;
+            }
+        }
+
+        function startTimer() {
+            if (timer) return;
+            isrunning = true;
+            timer = setInterval(tick, 1000);
+            updateStartButton();
+        }
+
+        function pauseTimer() {
+            isrunning = false;
+            clearInterval(timer);
+            timer = null;
+            updateStartButton();
+        }
+
+        function resetTimer() {
+            isrunning = false;
+            clearInterval(timer);
+            timer = null;
+            mode = 'work';
+            sessionCount = 0;
+            timeleft = workDuration;
+            document.getElementById("sessionCount").innerText = sessionCount;
+            updatedisplay();
+            updateStartButton();
+        }
+
+        updatedisplay();
+    </script>
+</body>
+</html>

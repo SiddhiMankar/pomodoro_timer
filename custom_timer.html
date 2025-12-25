@@ -446,6 +446,13 @@
     </div>
 
     <script>
+        const workAudio = new Audio("audio/workaudio.mp3.mp3");
+        const breakAudio = new Audio("audio/breakaudio.mp3.mp3");
+        const dingAudio = new Audio("audio/ding.mp3.mp3");
+
+        workAudio.loop = true;
+        breakAudio.loop = true;
+
         let mode = 'work';
         let workDuration = 0;
         let breakDuration = 0;
@@ -459,6 +466,30 @@
         const progressCircle = document.getElementById('progressCircle');
         progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
         progressCircle.style.strokeDashoffset = 0;
+        
+        function stopAllMusic() {
+            workAudio.pause();
+            breakAudio.pause();
+            workAudio.currentTime = 0;
+            breakAudio.currentTime = 0;
+        }
+
+        function playWorkMusic() {
+            stopAllMusic();
+            workAudio.volume = 0.4;
+            workAudio.play();
+        }
+
+        function playBreakMusic() {
+            stopAllMusic();
+            breakAudio.volume = 0.4;
+            breakAudio.play();
+        }
+
+        function playDing() {
+            dingAudio.currentTime = 0;
+            dingAudio.play();
+        }
 
         function convertToSeconds(timeStr) {
             if(!/^\d{1,3}:\d{2}$/.test(timeStr)){
@@ -570,6 +601,11 @@
             timeleft = timeleft - 1;
             
             if (timeleft <= 0) {
+                clearInterval(timer);
+                timer = null;
+                isrunning = false;
+                stopAllMusic();
+                playDing();
                 if (mode === "work") {
                     sessionCount = sessionCount + 1;
                     document.getElementById("sessionCount").innerText = sessionCount;
@@ -581,12 +617,10 @@
                     showNotification("Break is over! Ready to get back to work?");
                     mode = "work";
                     timeleft = workDuration;
-                    
                 }
-setTimeout(() => {
-    isrunning = true;
-}, 1000);
-
+                updatedisplay();
+                updateStartButton();
+                return;
             }
             updatedisplay();
         }
@@ -609,6 +643,7 @@ setTimeout(() => {
             isrunning = true;
             timer = setInterval(tick, 1000);
             updateStartButton();
+            mode === 'work' ? playWorkMusic() : playBreakMusic();
         }
 
         function pauseTimer() {
@@ -616,9 +651,11 @@ setTimeout(() => {
             clearInterval(timer);
             timer = null;
             updateStartButton();
+            stopAllMusic();
         }
 
         function resetTimer() {
+            pauseTimer();
             isrunning = false;
             clearInterval(timer);
             timer = null;

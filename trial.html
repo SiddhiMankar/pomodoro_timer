@@ -1,0 +1,127 @@
+<!-- FILE 1: custom_timer.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Custom Pomodoro Timer</title>
+<!-- styles unchanged -->
+</head>
+
+<body class="setup-mode">
+<!-- HTML unchanged -->
+
+<script>
+/* ================= STATE ================= */
+let mode = "work";
+let workDuration = 0;
+let breakDuration = 0;
+let timeleft = 0;
+let sessionCount = 0;
+let timer = null;
+let isrunning = false;
+
+/* ================= AUDIO ================= */
+const workMusic = new Audio("audio/workaudio.mp3");
+const breakMusic = new Audio("audio/breakaudio.mp3");
+const bellSound = new Audio("audio/ding.mp3");
+
+workMusic.loop = true;
+breakMusic.loop = true;
+
+function stopAllMusic() {
+  workMusic.pause();
+  breakMusic.pause();
+  workMusic.currentTime = 0;
+  breakMusic.currentTime = 0;
+}
+
+function playWorkMusic() {
+  stopAllMusic();
+  workMusic.volume = 0.4;
+  workMusic.play();
+}
+
+function playBreakMusic() {
+  stopAllMusic();
+  breakMusic.volume = 0.4;
+  breakMusic.play();
+}
+
+function playBell() {
+  bellSound.currentTime = 0;
+  bellSound.play();
+}
+
+/* ================= TIMER ================= */
+function tick() {
+  if (!isrunning) return;
+
+  timeleft--;
+
+  if (timeleft <= 0) {
+    clearInterval(timer);
+    timer = null;
+    isrunning = false;
+    stopAllMusic();
+    playBell();
+
+    if (mode === "work") {
+      sessionCount++;
+      document.getElementById("sessionCount").innerText = sessionCount;
+      mode = "break";
+      timeleft = breakDuration;
+      showNotification("Work done. Click Start for break.");
+    } else {
+      mode = "work";
+      timeleft = workDuration;
+      showNotification("Break over. Click Start to focus.");
+    }
+
+    updateStartButton();
+    updatedisplay();
+    return;
+  }
+
+  updatedisplay();
+}
+
+/* ================= CONTROLS ================= */
+function startTimer() {
+  if (timer) return;
+
+  isrunning = true;
+  timer = setInterval(tick, 1000);
+  updateStartButton();
+
+  mode === "work" ? playWorkMusic() : playBreakMusic();
+}
+
+function pauseTimer() {
+  clearInterval(timer);
+  timer = null;
+  isrunning = false;
+  stopAllMusic();
+  updateStartButton();
+}
+
+function resetTimer() {
+  pauseTimer();
+  mode = "work";
+  timeleft = workDuration;
+  updatedisplay();
+}
+
+/* ================= UI ================= */
+function updateStartButton() {
+  const btn = document.getElementById("startBtn");
+  if (isrunning) {
+    btn.innerHTML = "⏸ Pause";
+    btn.onclick = pauseTimer;
+  } else {
+    btn.innerHTML = "▶ Start";
+    btn.onclick = startTimer;
+  }
+}
+</script>
+</body>
+</html>
